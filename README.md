@@ -1,4 +1,5 @@
 # Ulvenstein
+[Demo](https://ericwoude.github.io/ulvenstein/)
 
 ## Building
 1. The first step is to build the wasm pkg
