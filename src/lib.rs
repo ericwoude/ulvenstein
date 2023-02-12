@@ -3,7 +3,7 @@ use wasm_bindgen::prelude::*;
 mod ulvenstein;
 
 #[wasm_bindgen]
-pub fn request_frame() -> Result<JsValue, JsValue> {
+pub fn request_screen() -> Result<JsValue, JsValue> {
     let rectangles = ulvenstein::game_loop();
     Ok(serde_wasm_bindgen::to_value(&rectangles)?)
 }
@@ -14,4 +14,3 @@ pub fn register_input(val: JsValue) -> Result<(), JsValue> {
     ulvenstein::INPUT.write().unwrap().push(keys);
     Ok(())
 }
-

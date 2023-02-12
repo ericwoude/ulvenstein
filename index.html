@@ -9,8 +9,11 @@
       <div id="ulvenstein-bg-floor"></div>
     </div>
     <script type="module">
-      import init, { request_frame, register_input } from "./pkg/ulvenstein.js";
-  
+      import init, { request_screen, register_input } from "./pkg/ulvenstein.js";
+
+      const canvas = document.getElementById('ulvenstein');
+      const ctx = canvas.getContext('2d');
+
       const keys = {
         _state: {},
 
@@ -35,39 +38,44 @@
       window.addEventListener('keyup', function(event) { keys.onKeyup(event); }, false);
       window.addEventListener('keydown', function(event) { keys.onKeydown(event); }, false);
 
-      init().then(() => {
-        const canvas = document.getElementById('ulvenstein');
-        const ctx = canvas.getContext('2d');
-
-        function render(time) {
-          const keyState = {
-            "left": keys.isDown(keys.LEFT),
-            "up": keys.isDown(keys.UP),
-            "right": keys.isDown(keys.RIGHT),
-            "down": keys.isDown(keys.DOWN),
-          }
-          register_input(keyState);
-
-          const screen = request_frame();
-          if (screen.length > 0) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-          }
-
-          screen.forEach(stroke => {
-            ctx.strokeStyle = stroke.dark_hue ? `rgb(102, 90, 72)` : `rgb(159, 135, 114)`;
-            ctx.lineWidth = 2;
-
-            ctx.beginPath();
-            ctx.moveTo(stroke.x, stroke.draw_start);
-            ctx.lineTo(stroke.x, stroke.draw_end);
-            ctx.closePath();
-
-            ctx.stroke();
-          });
-
-          requestAnimationFrame(render);
+      function render() {
+        const screen = request_screen();
+        if (screen.length > 0) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
+
+        screen.forEach(stroke => {
+          ctx.strokeStyle = stroke.dark_hue ? `rgb(102, 90, 72)` : `rgb(159, 135, 114)`;
+          ctx.lineWidth = 2;
+
+          ctx.beginPath();
+          ctx.moveTo(stroke.x, stroke.y_start);
+          ctx.lineTo(stroke.x, stroke.y_end);
+          ctx.closePath();
+
+          ctx.stroke();
+        });
+      }
+      
+      function handle_input() {
+        const keyState = {
+          "left": keys.isDown(keys.LEFT),
+          "up": keys.isDown(keys.UP),
+          "right": keys.isDown(keys.RIGHT),
+          "down": keys.isDown(keys.DOWN),
+        }
+        register_input(keyState);
+      }
+
+      function game_loop(time) {
+        handle_input();
         render();
+
+        requestAnimationFrame(game_loop);
+      }
+
+      init().then(() => {
+        game_loop();
       });
     </script>
     <style>

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::sync::RwLock;
+use std::cmp::{max, min};
 
 const MAP_WIDTH: usize = 24;
 const MAP_HEIGHT: usize = 24;
@@ -144,22 +145,22 @@ impl Default for State {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Rectangle {
+pub struct Stroke {
     pub x: i32,
-    pub draw_start: i32,
-    pub draw_end: i32,
+    pub y_start: i32,
+    pub y_end: i32,
     pub color: i32,
     pub dark_hue: i32,
 }
 
-impl Rectangle {
-    pub fn new(xs: i32, ds: i32, de: i32, c: i32, dh: i32) -> Rectangle {
-        Rectangle {
-            x: xs,
-            draw_start: ds,
-            draw_end: de,
-            color: c,
-            dark_hue: dh,
+impl Stroke {
+    pub fn new(x: i32, y_start: i32, y_end: i32, color: i32, dark_hue: i32) -> Stroke {
+        Stroke {
+            x,
+            y_start,
+            y_end,
+            color,
+            dark_hue,
         }
     }
 }
@@ -217,7 +218,7 @@ fn move_backward() {
     }
 }
 
-pub fn game_loop() -> Vec<Rectangle> {
+pub fn game_loop() -> Vec<Stroke> {
     // Redraw the frame if there is input to handle as
     // the camera has potentially changed.
     if handle_input() {
@@ -254,13 +255,11 @@ fn handle_input() -> bool {
     false
 }
 
-fn render_frame() -> Vec<Rectangle> {
-    let mut messages: Vec<Rectangle> = vec![];
+fn render_frame() -> Vec<Stroke> {
+    let mut screen: Vec<Stroke> = vec![];
 
     if let Ok(state) = STATE.read() {
-        let mut x: usize = 0;
-
-        while x < SCREEN_WIDTH {
+        for x in 0..SCREEN_WIDTH {
             let camera_x: f32 = 2.0 * x as f32 / SCREEN_WIDTH as f32 - 1.0;
             let ray_dir_x: f32 = state.dir_x + state.plane_x * camera_x;
             let ray_dir_y: f32 = state.dir_y + state.plane_y * camera_x;
@@ -318,29 +317,21 @@ fn render_frame() -> Vec<Rectangle> {
                 side_dist_y - delta_dist_y
             };
 
-            let line_height: isize = (SCREEN_HEIGHT as f32 / perp_wall_dist) as isize;
-            let mut draw_start: isize = -line_height / 2 + SCREEN_HEIGHT as isize / 2;
-            if draw_start < 0 {
-                draw_start = 0;
-            }
-
-            let mut draw_end: isize = line_height / 2 + SCREEN_HEIGHT as isize / 2;
-            if draw_end > SCREEN_HEIGHT as isize {
-                draw_end = SCREEN_HEIGHT as isize - 1;
-            }
-
+            let height: isize = (SCREEN_HEIGHT as f32 / perp_wall_dist) as isize;
+            let y_start: isize = max(-height / 2 + SCREEN_HEIGHT as isize / 2, 0);
+            let y_end = min(height / 2 + SCREEN_HEIGHT as isize / 2, SCREEN_HEIGHT as isize - 1);
             let color: u8 = WORLD[map_x][map_y];
-            let darker_hue: bool = side == 1;
-            messages.push(Rectangle::new(
+            let dark_hue: bool = side == 1;
+
+            screen.push(Stroke::new(
                 x as i32,
-                draw_start as i32,
-                draw_end as i32,
+                y_start as i32,
+                y_end as i32,
                 color as i32,
-                darker_hue as i32,
+                dark_hue as i32,
             ));
-            x += 1;
         }
     }
 
-    messages
+    screen
 }
