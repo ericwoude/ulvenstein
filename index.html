@@ -11,8 +11,8 @@
     <script type="module">
       import init, { request_frame, register_input } from "./pkg/ulvenstein.js";
   
-      var Key = {
-        _pressed: {},
+      const keys = {
+        _state: {},
 
         LEFT: 37,
         UP: 38,
@@ -20,74 +20,66 @@
         DOWN: 40,
         
         isDown: function(keyCode) {
-          return keyCode in this._pressed;
+          return keyCode in this._state;
         },
         
         onKeydown: function(event) {
-          this._pressed[event.keyCode] = true;
+          this._state[event.keyCode] = true;
         },
         
         onKeyup: function(event) {
-          delete this._pressed[event.keyCode];
+          delete this._state[event.keyCode];
         }
       };
 
-      window.addEventListener('keyup', function(event) { Key.onKeyup(event); }, false);
-      window.addEventListener('keydown', function(event) { Key.onKeydown(event); }, false);
+      window.addEventListener('keyup', function(event) { keys.onKeyup(event); }, false);
+      window.addEventListener('keydown', function(event) { keys.onKeydown(event); }, false);
 
       init().then(() => {
         const canvas = document.getElementById('ulvenstein');
         const ctx = canvas.getContext('2d');
 
-        const fps = 60;
-        function render() {
-          setTimeout(() => {
-            let keys = {
-              "left": Key.isDown(Key.LEFT),
-              "up": Key.isDown(Key.UP),
-              "right": Key.isDown(Key.RIGHT),
-              "down": Key.isDown(Key.DOWN),
-              "space": Key.isDown(Key.SPACE),
-            }
+        function render(time) {
+          const keyState = {
+            "left": keys.isDown(keys.LEFT),
+            "up": keys.isDown(keys.UP),
+            "right": keys.isDown(keys.RIGHT),
+            "down": keys.isDown(keys.DOWN),
+          }
+          register_input(keyState);
 
-            register_input(keys);
+          const screen = request_frame();
+          if (screen.length > 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+          }
 
-            const rectangles = request_frame();
-            if (rectangles.length > 0) {
-              ctx.clearRect(0, 0, canvas.width, canvas.height);
-            }
+          screen.forEach(stroke => {
+            ctx.strokeStyle = stroke.dark_hue ? `rgb(102, 90, 72)` : `rgb(159, 135, 114)`;
+            ctx.lineWidth = 2;
 
-            rectangles.forEach(e => {
-              ctx.beginPath();
-              if (e.dark_hue) {
-                ctx.strokeStyle = `rgb(102, 90, 72)`;
-              } else {  
-                ctx.strokeStyle = `rgb(159, 135, 114)`;
-              }
-              ctx.lineWidth = 2;
-              ctx.moveTo(e.x, e.draw_start);
-              ctx.lineTo(e.x, e.draw_end);
-              ctx.stroke();
-              ctx.closePath();
-            });
+            ctx.beginPath();
+            ctx.moveTo(stroke.x, stroke.draw_start);
+            ctx.lineTo(stroke.x, stroke.draw_end);
+            ctx.closePath();
 
-            requestAnimationFrame(render);
-          }, 1000 / fps);
+            ctx.stroke();
+          });
+
+          requestAnimationFrame(render);
         }
         render();
       });
     </script>
     <style>
       body {
-        height: 95vh;
-        padding: 0;
-        margin: 0;
+        display: flex;
+        justify-content: center;
       }
 
       #ulvenstein-bg-sky {
         position:absolute;
         top:0px;
-        left:0px; 
+        left:0px;
         width: 640px;
         height: 240px;
         z-index: -1;
@@ -97,7 +89,7 @@
       #ulvenstein-bg-floor {
         position:absolute;
         top:240px;
-        left:0px; 
+        left:0px;
         width: 640px;
         height: 240px;
         z-index: -1;
@@ -105,6 +97,7 @@
       }
 
       #canvas-wrapper {
+        position: absolute;
         width: 640px;
         height: 480px;
       }
