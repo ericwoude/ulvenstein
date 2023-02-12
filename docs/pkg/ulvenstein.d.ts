@@ -3,7 +3,7 @@
 /**
 * @returns {any}
 */
-export function request_frame(): any;
+export function request_screen(): any;
 /**
 * @param {any} val
 */
@@ -13,7 +13,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
-  readonly request_frame: (a: number) => void;
+  readonly request_screen: (a: number) => void;
   readonly register_input: (a: number, b: number) => void;
   readonly __wbindgen_malloc: (a: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number) => number;

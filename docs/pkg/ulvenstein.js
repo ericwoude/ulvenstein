@@ -190,10 +190,10 @@ function debugString(val) {
 /**
 * @returns {any}
 */
-export function request_frame() {
+export function request_screen() {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-        wasm.request_frame(retptr);
+        wasm.request_screen(retptr);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
         var r2 = getInt32Memory0()[retptr / 4 + 2];
